@@ -3,120 +3,148 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>🚂 RailAssistAI - Indian Train App + AI Chatbot</title>
-  <meta name="description" content="RailAssistAI - Search trains, book tickets, and chat with AI assistant for Indian Railways">
+  <title>RailAssist AI - Indian Railways AI Assistant</title>
+  <meta name="description" content="RailAssist AI - AI-powered Indian Railways companion. Search trains, check PNR, file complaints in 22 Indian languages.">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <!-- Floating particles background -->
-  <div class="particles" id="particles"></div>
-
-  <!-- Navigation -->
-  <nav class="navbar">
-    <div class="nav-brand">
-      <span class="nav-icon">🚂</span>
-      <span class="nav-title">RailAssistAI</span>
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="brand">
+        <div class="brand-avatar">RA</div>
+        <div class="brand-info">
+          <span class="brand-name">RailAssist AI</span>
+          <span class="brand-sub">Indian Railways</span>
+        </div>
+      </div>
     </div>
-    <div class="nav-links">
-      <button class="nav-btn active" data-view="home" id="nav-home">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-        Home
+
+    <button class="new-chat-btn" id="new-chat-btn">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      + New Conversation
+    </button>
+
+    <div class="chat-history" id="chat-history">
+      <div class="history-label">Recent Chats</div>
+    </div>
+
+    <div class="sidebar-nav">
+      <button class="sidebar-nav-btn" data-action="pnr" id="sidebar-pnr">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="9" y1="9" x2="15" y2="9"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="12" y2="17"/></svg>
+        PNR Status
       </button>
-      <button class="nav-btn" data-view="chat" id="nav-chat">
+      <button class="sidebar-nav-btn" data-action="search" id="sidebar-search">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        Train Search
+      </button>
+      <button class="sidebar-nav-btn" data-action="complaints" id="sidebar-complaints">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-        AI Chat
+        Complaints
+      </button>
+      <button class="sidebar-nav-btn" data-action="languages" id="sidebar-languages">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+        Languages
       </button>
     </div>
-    <div class="nav-status">
-      <span class="status-dot" id="status-dot"></span>
-      <span class="status-text" id="status-text">Connecting...</span>
-    </div>
-  </nav>
+  </aside>
 
-  <!-- Home View -->
-  <main class="view active" id="view-home">
-    <section class="hero">
-      <div class="hero-content">
-        <h1 class="hero-title">
-          <span class="hero-emoji">🚂</span>
-          Find Your <span class="gradient-text">Perfect Train</span>
-        </h1>
-        <p class="hero-subtitle">Search across Indian Railways with AI-powered recommendations</p>
-      </div>
-    </section>
+  <!-- Mobile sidebar toggle -->
+  <button class="sidebar-toggle" id="sidebar-toggle">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+  </button>
 
-    <section class="search-section">
-      <div class="search-card" id="search-card">
-        <div class="search-header">
-          <h2>Search Trains</h2>
-        </div>
-        <div class="search-form">
-          <div class="input-group">
-            <label for="from-input">From Station</label>
-            <div class="input-wrapper">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v4m0 12v4m-10-10h4m12 0h4"/></svg>
-              <input type="text" id="from-input" placeholder="e.g. MAS (Chennai)" value="MAS">
-            </div>
-          </div>
-          <button class="swap-btn" id="swap-btn" title="Swap stations">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
-          </button>
-          <div class="input-group">
-            <label for="to-input">To Station</label>
-            <div class="input-wrapper">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-              <input type="text" id="to-input" placeholder="e.g. NDLS (New Delhi)" value="NDLS">
-            </div>
-          </div>
-          <button class="search-btn" id="search-btn">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-            <span>Search Trains</span>
-          </button>
-        </div>
-      </div>
-    </section>
-
-    <!-- Results -->
-    <section class="results-section" id="results-section" style="display:none;">
-      <h2 class="results-title" id="results-title"></h2>
-      <div class="train-list" id="train-list"></div>
-    </section>
-
-    <!-- Empty State -->
-    <section class="empty-state" id="empty-state">
-      <div class="empty-icon">🔍</div>
-      <h3>Search for trains above</h3>
-      <p>Enter source and destination stations to find available trains</p>
-    </section>
-  </main>
-
-  <!-- Chat View -->
-  <main class="view" id="view-chat">
-    <div class="chat-container">
-      <div class="chat-messages" id="chat-messages">
-        <div class="chat-welcome">
-          <div class="welcome-avatar">
-            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 2a5 5 0 0 1 5 5v3a5 5 0 0 1-10 0V7a5 5 0 0 1 5-5z"/><path d="M8 14v1a4 4 0 0 0 8 0v-1"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="8" y1="22" x2="16" y2="22"/></svg>
-          </div>
-          <h2>RailAssistAI AI Assistant</h2>
-          <p>Ask me anything about Indian trains — routes, schedules, fares, PNR status, and more!</p>
-          <div class="quick-actions">
-            <button class="quick-btn" data-msg="Show trains from Chennai to Delhi">🚆 Chennai → Delhi</button>
-            <button class="quick-btn" data-msg="What is PNR status?">📋 PNR Status</button>
-            <button class="quick-btn" data-msg="Best trains for family travel">👨‍👩‍👧‍👦 Family Travel</button>
-            <button class="quick-btn" data-msg="कृपया ट्रेन की जानकारी दें">🇮🇳 हिंदी में पूछें</button>
-          </div>
-        </div>
-      </div>
-      <div class="chat-input-area">
-        <button class="mic-btn" id="mic-btn" title="Voice input">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+  <!-- Main Chat Area -->
+  <main class="main-area">
+    <!-- Chat Header -->
+    <header class="chat-header">
+      <div class="chat-header-left">
+        <button class="menu-btn" id="menu-btn">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
         </button>
-        <input type="text" id="chat-input" placeholder="Ask about trains, routes, bookings..." autocomplete="off">
+        <div class="header-title">
+          <h1>RailAssist AI</h1>
+          <div class="header-status">
+            <span class="status-dot-live" id="status-dot"></span>
+            <span id="status-text">AI powered • Indian Railways</span>
+          </div>
+        </div>
+      </div>
+      <div class="chat-header-right">
+        <select class="language-select" id="language-select">
+          <option value="eng">English</option>
+          <option value="hin">हिन्दी (Hindi)</option>
+          <option value="tam">தமிழ் (Tamil)</option>
+          <option value="tel">తెలుగు (Telugu)</option>
+          <option value="kan">ಕನ್ನಡ (Kannada)</option>
+          <option value="mal">മലയാളം (Malayalam)</option>
+          <option value="ben">বাংলা (Bengali)</option>
+          <option value="mar">मराठी (Marathi)</option>
+          <option value="guj">ગુજરાતી (Gujarati)</option>
+          <option value="pan">ਪੰਜਾਬੀ (Punjabi)</option>
+          <option value="urd">اردو (Urdu)</option>
+        </select>
+        <button class="mute-btn" id="mute-btn" title="Mute AI voice">
+          <svg class="icon-unmuted" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+          <svg class="icon-muted" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display:none"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Chat Messages -->
+    <div class="chat-messages" id="chat-messages">
+      <!-- Welcome Screen -->
+      <div class="welcome-screen" id="welcome-screen">
+        <div class="welcome-icon">
+          <div class="welcome-avatar-img">🚂</div>
+        </div>
+        <h2 class="welcome-title">Welcome to RailAssist AI</h2>
+        <p class="welcome-subtitle">Your AI-powered Indian Railways companion. Ask me anything in any of 22 Indian languages.</p>
+
+        <div class="action-cards">
+          <div class="action-card card-orange" data-msg="How do I check my PNR status? My PNR is 1234567890">
+            <div class="card-icon">📋</div>
+            <h3>Check PNR</h3>
+            <p>How do I check my PNR status? My PNR is 1234567890</p>
+          </div>
+          <div class="action-card card-pink" data-msg="What trains run from New Delhi to Mumbai?">
+            <div class="card-icon">🚆</div>
+            <h3>Find Trains</h3>
+            <p>What trains run from New Delhi to Mumbai?</p>
+          </div>
+          <div class="action-card card-purple" data-msg="I want to file a complaint about train cleanliness">
+            <div class="card-icon">📝</div>
+            <h3>File Complaint</h3>
+            <p>I want to file a complaint about train cleanliness</p>
+          </div>
+          <div class="action-card card-teal" data-msg="Which platform does Rajdhani Express depart from at New Delhi?">
+            <div class="card-icon">🚏</div>
+            <h3>Platform Info</h3>
+            <p>Which platform does Rajdhani Express depart from at New...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Action Chips -->
+    <div class="quick-chips" id="quick-chips">
+      <button class="chip chip-orange" data-msg="How do I check my PNR status?">📋 Check PNR</button>
+      <button class="chip chip-pink" data-msg="Find trains from Delhi to Mumbai">🚆 Find Trains</button>
+      <button class="chip chip-purple" data-msg="I want to file a complaint">📝 File Complaint</button>
+      <button class="chip chip-teal" data-msg="Which platform does my train depart from?">🚏 Platform Info</button>
+    </div>
+
+    <!-- Input Area -->
+    <div class="input-area">
+      <div class="input-container">
+        <input type="text" id="chat-input" placeholder="Ask in English..." autocomplete="off">
+        <button class="voice-btn" id="voice-btn" title="Voice input">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+        </button>
         <button class="send-btn" id="send-btn" title="Send message">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
         </button>
       </div>
     </div>

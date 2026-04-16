@@ -2,33 +2,62 @@
 const BACKEND_URL = 'http://localhost:3001';
 const AI_URL = 'http://localhost:3002';
 
-// ===== DOM Elements =====
 const $ = (sel) => document.querySelector(sel);
+let ttsEnabled = true;
 const $$ = (sel) => document.querySelectorAll(sel);
 
-// ===== Particles =====
-(function initParticles() {
-  const container = $('#particles');
-  for (let i = 0; i < 30; i++) {
-    const p = document.createElement('div');
-    p.className = 'particle';
-    p.style.left = Math.random() * 100 + '%';
-    p.style.animationDelay = Math.random() * 8 + 's';
-    p.style.animationDuration = (6 + Math.random() * 6) + 's';
-    container.appendChild(p);
+// ===== Mute Button =====
+document.addEventListener('DOMContentLoaded', () => {
+  const muteBtn = $('#mute-btn');
+  if (muteBtn) {
+    muteBtn.addEventListener('click', () => {
+      ttsEnabled = !ttsEnabled;
+      muteBtn.classList.toggle('muted', !ttsEnabled);
+      muteBtn.querySelector('.icon-unmuted').style.display = ttsEnabled ? '' : 'none';
+      muteBtn.querySelector('.icon-muted').style.display = ttsEnabled ? 'none' : '';
+      muteBtn.title = ttsEnabled ? 'Mute AI voice' : 'Unmute AI voice';
+      // Stop current speech if muting
+      if (!ttsEnabled && 'speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
+    });
   }
-})();
+});
 
-// ===== View Navigation =====
-$$('.nav-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    const view = btn.dataset.view;
-    $$('.nav-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    $$('.view').forEach(v => v.classList.remove('active'));
-    $(`#view-${view}`).classList.add('active');
-    if (view === 'chat') $('#chat-input').focus();
-  });
+// ===== Language Config =====
+const LANGUAGES = {
+  eng: { name: 'English', placeholder: 'Ask in English...', speech: 'en-IN' },
+  hin: { name: 'हिन्दी', placeholder: 'हिंदी में पूछें...', speech: 'hi-IN' },
+  tam: { name: 'தமிழ்', placeholder: 'தமிழில் கேளுங்கள்...', speech: 'ta-IN' },
+  tel: { name: 'తెలుగు', placeholder: 'తెలుగులో అడగండి...', speech: 'te-IN' },
+  kan: { name: 'ಕನ್ನಡ', placeholder: 'ಕನ್ನಡದಲ್ಲಿ ಕೇಳಿ...', speech: 'kn-IN' },
+  mal: { name: 'മലയാളം', placeholder: 'മലയാളത്തിൽ ചോദിക്കൂ...', speech: 'ml-IN' },
+  ben: { name: 'বাংলা', placeholder: 'বাংলায় জিজ্ঞাসা করুন...', speech: 'bn-IN' },
+  mar: { name: 'मराठी', placeholder: 'मराठीत विचारा...', speech: 'mr-IN' },
+  guj: { name: 'ગુજરાતી', placeholder: 'ગુજરાતીમાં પૂછો...', speech: 'gu-IN' },
+  pan: { name: 'ਪੰਜਾਬੀ', placeholder: 'ਪੰਜਾਬੀ ਵਿੱਚ ਪੁੱਛੋ...', speech: 'pa-IN' },
+  urd: { name: 'اردو', placeholder: 'اردو میں پوچھیں...', speech: 'ur-IN' },
+};
+
+let currentLang = 'eng';
+let chatCount = 0;
+let currentMessages = [];
+
+// ===== Language Selector =====
+const langSelect = $('#language-select');
+const chatInput = $('#chat-input');
+
+langSelect.addEventListener('change', () => {
+  currentLang = langSelect.value;
+  const lang = LANGUAGES[currentLang];
+  chatInput.placeholder = lang.placeholder;
+  if (recognition) {
+    recognition.lang = lang.speech;
+  }
+  // Notify user of language change
+  const statusText = $('#status-text');
+  statusText.textContent = `Language: ${lang.name} • Indian Railways`;
+  setTimeout(() => { statusText.textContent = 'AI powered • Indian Railways'; }, 3000);
 });
 
 // ===== Health Check =====
@@ -36,118 +65,74 @@ async function checkHealth() {
   const dot = $('#status-dot');
   const text = $('#status-text');
   try {
-    const [backendRes, aiRes] = await Promise.all([
-      fetch(`${BACKEND_URL}/health`).then(r => r.json()),
-      fetch(`${AI_URL}/health`).then(r => r.json())
-    ]);
-    dot.className = 'status-dot connected';
-    text.textContent = 'All systems operational';
+    const res = await fetch(`${AI_URL}/health`, { signal: AbortSignal.timeout(3000) });
+    if (res.ok) {
+      dot.className = 'status-dot-live';
+      text.textContent = 'AI powered • Indian Railways';
+    }
   } catch (e) {
-    dot.className = 'status-dot error';
-    text.textContent = 'Some services offline';
+    dot.className = 'status-dot-live offline';
+    text.textContent = 'Connecting...';
   }
 }
 checkHealth();
-setInterval(checkHealth, 30000);
+setInterval(checkHealth, 15000);
 
-// ===== Train Search =====
-const searchBtn = $('#search-btn');
-const fromInput = $('#from-input');
-const toInput = $('#to-input');
-const swapBtn = $('#swap-btn');
-const resultsSec = $('#results-section');
-const trainList = $('#train-list');
-const resultsTitle = $('#results-title');
-const emptyState = $('#empty-state');
-
-swapBtn.addEventListener('click', () => {
-  [fromInput.value, toInput.value] = [toInput.value, fromInput.value];
-});
-
-searchBtn.addEventListener('click', searchTrains);
-fromInput.addEventListener('keydown', e => { if (e.key === 'Enter') searchTrains(); });
-toInput.addEventListener('keydown', e => { if (e.key === 'Enter') searchTrains(); });
-
-async function searchTrains() {
-  const from = fromInput.value.trim();
-  const to = toInput.value.trim();
-  if (!from || !to) return;
-
-  searchBtn.classList.add('loading');
-  searchBtn.querySelector('span').textContent = 'Searching...';
-  emptyState.style.display = 'none';
-
-  try {
-    const res = await fetch(`${BACKEND_URL}/api/trains/search?source=${from}&destination=${to}`);
-    if (!res.ok) throw new Error('Search failed');
-    const data = await res.json();
-    const trains = data.trains || [];
-    renderTrains(trains, from, to);
-  } catch (e) {
-    // Demo fallback data
-    const demoTrains = [
-      { number: '12621', name: 'Tamil Nadu Express', from: { name: from }, to: { name: to }, fare: 1850 },
-      { number: '12951', name: 'Mumbai Rajdhani', from: { name: from }, to: { name: to }, fare: 3200 },
-      { number: '12301', name: 'Howrah Rajdhani', from: { name: from }, to: { name: to }, fare: 2800 },
-      { number: '12002', name: 'Shatabdi Express', from: { name: from }, to: { name: to }, fare: 1450 },
-      { number: '12431', name: 'Thiruvananthapuram Rajdhani', from: { name: from }, to: { name: to }, fare: 3550 },
-    ];
-    renderTrains(demoTrains, from, to);
-  }
-
-  searchBtn.classList.remove('loading');
-  searchBtn.querySelector('span').textContent = 'Search Trains';
-}
-
-function renderTrains(trains, from, to) {
-  if (!trains.length) {
-    resultsSec.style.display = 'none';
-    emptyState.style.display = 'block';
-    emptyState.querySelector('h3').textContent = 'No trains found';
-    emptyState.querySelector('p').textContent = `Try different stations or dates`;
-    return;
-  }
-  emptyState.style.display = 'none';
-  resultsSec.style.display = 'block';
-  resultsTitle.textContent = `${trains.length} trains found · ${from} → ${to}`;
-  trainList.innerHTML = trains.map((t, i) => `
-    <div class="train-card" style="animation-delay: ${i * 0.08}s">
-      <div class="train-info">
-        <h3><span class="train-number">${t.number}</span>${t.name}</h3>
-        <div class="train-route">
-          ${t.from?.name || from} <span class="arrow">→</span> ${t.to?.name || to}
-        </div>
-      </div>
-      <div class="train-fare">₹${t.fare?.toLocaleString('en-IN') || '—'}</div>
-    </div>
-  `).join('');
-}
-
-// ===== Socket.IO Chat =====
+// ===== Socket.IO =====
 let socket;
 try {
-  socket = io(AI_URL, { transports: ['websocket'], autoConnect: true });
-  socket.on('connect', () => console.log('✅ Connected to AI'));
+  socket = io(AI_URL, { transports: ['websocket', 'polling'], autoConnect: true });
+  socket.on('connect', () => {
+    console.log('✅ Connected to AI');
+    checkHealth();
+  });
   socket.on('chat-response', handleAIResponse);
-  socket.on('disconnect', () => console.log('❌ Disconnected from AI'));
+  socket.on('disconnect', () => {
+    console.log('❌ Disconnected from AI');
+    const dot = $('#status-dot');
+    dot.className = 'status-dot-live offline';
+  });
 } catch (e) {
   console.warn('Socket.IO not available');
 }
 
+// ===== Chat Functions =====
 const chatMessages = $('#chat-messages');
-const chatInput = $('#chat-input');
 const sendBtn = $('#send-btn');
-const micBtn = $('#mic-btn');
+const welcomeScreen = $('#welcome-screen');
 
-// Send message
 sendBtn.addEventListener('click', sendMessage);
 chatInput.addEventListener('keydown', e => { if (e.key === 'Enter') sendMessage(); });
 
-// Quick actions
-$$('.quick-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    chatInput.value = btn.dataset.msg;
+// Action cards
+$$('.action-card').forEach(card => {
+  card.addEventListener('click', () => {
+    chatInput.value = card.dataset.msg;
     sendMessage();
+  });
+});
+
+// Quick chips
+$$('.chip').forEach(chip => {
+  chip.addEventListener('click', () => {
+    chatInput.value = chip.dataset.msg;
+    sendMessage();
+  });
+});
+
+// Sidebar nav buttons
+$$('.sidebar-nav-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const action = btn.dataset.action;
+    const prompts = {
+      pnr: 'How do I check my PNR status?',
+      search: 'Find trains from Chennai to Delhi',
+      complaints: 'How do I file a complaint about my train?',
+      languages: 'What languages do you support?'
+    };
+    chatInput.value = prompts[action] || '';
+    sendMessage();
+    closeSidebar();
   });
 });
 
@@ -156,23 +141,22 @@ function sendMessage() {
   if (!text) return;
 
   // Hide welcome
-  const welcome = $('.chat-welcome');
-  if (welcome) welcome.style.display = 'none';
+  if (welcomeScreen) welcomeScreen.style.display = 'none';
 
   addMessage(text, 'user');
   chatInput.value = '';
-
-  // Show typing
   showTyping();
 
-  // Send via socket
   if (socket && socket.connected) {
-    socket.emit('chat-message', { message: text, userId: 'web-user-1' });
+    socket.emit('chat-message', {
+      message: text,
+      userId: 'web-user-1',
+      language: currentLang
+    });
   } else {
-    // Fallback: simulate response
     setTimeout(() => {
       removeTyping();
-      addMessage("I'm connecting to the AI service. Please make sure the AI service is running on port 3002.", 'ai');
+      addMessage("I'm connecting to the AI service. Please wait a moment and try again.", 'ai');
     }, 1500);
   }
 }
@@ -180,28 +164,91 @@ function sendMessage() {
 function handleAIResponse(data) {
   removeTyping();
   addMessage(data.message, 'ai', data.language);
+  // Speak the response
+  if (ttsEnabled) {
+    speakText(data.message, data.language || currentLang);
+  }
+}
+
+// ===== Text-to-Speech =====
+function speakText(text, lang) {
+  if (!('speechSynthesis' in window)) return;
+
+  // Stop any ongoing speech
+  window.speechSynthesis.cancel();
+
+  // Clean text for speech (remove emojis, markdown-like symbols)
+  const cleanText = text
+    .replace(/[\u{1F600}-\u{1F9FF}\u{2600}-\u{2B55}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}]/gu, '')
+    .replace(/[*_#•→↔]/g, '')
+    .replace(/\n+/g, '. ')
+    .trim();
+
+  if (!cleanText) return;
+
+  // Map language codes to BCP 47 speech tags
+  const speechLangMap = {
+    eng: 'en-IN', hin: 'hi-IN', tam: 'ta-IN', tel: 'te-IN',
+    kan: 'kn-IN', mal: 'ml-IN', ben: 'bn-IN', mar: 'mr-IN',
+    guj: 'gu-IN', pan: 'pa-IN', urd: 'ur-IN'
+  };
+
+  const utterance = new SpeechSynthesisUtterance(cleanText);
+  utterance.lang = speechLangMap[lang] || 'en-IN';
+  utterance.rate = 0.95;
+  utterance.pitch = 1;
+  utterance.volume = 1;
+
+  // Try to find a matching voice
+  const voices = window.speechSynthesis.getVoices();
+  const targetLang = speechLangMap[lang] || 'en-IN';
+  const matchingVoice = voices.find(v => v.lang === targetLang) ||
+                        voices.find(v => v.lang.startsWith(targetLang.split('-')[0]));
+  if (matchingVoice) {
+    utterance.voice = matchingVoice;
+  }
+
+  window.speechSynthesis.speak(utterance);
+}
+
+// Pre-load voices
+if ('speechSynthesis' in window) {
+  window.speechSynthesis.getVoices();
+  window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
 }
 
 function addMessage(text, role, lang) {
   const now = new Date();
   const time = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
-  const langLabel = lang && lang !== 'eng' ? ` · ${lang.toUpperCase()}` : '';
+  const avatar = role === 'ai' ? '🚂' : '👤';
 
   const div = document.createElement('div');
   div.className = `message ${role}`;
   div.innerHTML = `
-    <div class="message-bubble">${escapeHtml(text)}</div>
-    <div class="message-meta">${time}${langLabel}</div>
+    <div class="msg-avatar">${avatar}</div>
+    <div class="msg-content">
+      <div class="msg-bubble">${escapeHtml(text)}</div>
+      <div class="msg-meta">${time}</div>
+    </div>
   `;
   chatMessages.appendChild(div);
   chatMessages.scrollTop = chatMessages.scrollHeight;
+
+  currentMessages.push({ text, role, time });
 }
 
 function showTyping() {
   const div = document.createElement('div');
   div.className = 'typing-indicator';
   div.id = 'typing';
-  div.innerHTML = '<div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>';
+  div.innerHTML = `
+    <div class="msg-avatar">🚂</div>
+    <div class="typing-dots">
+      <div class="typing-dot"></div>
+      <div class="typing-dot"></div>
+      <div class="typing-dot"></div>
+    </div>
+  `;
   chatMessages.appendChild(div);
   chatMessages.scrollTop = chatMessages.scrollHeight;
 }
@@ -217,32 +264,130 @@ function escapeHtml(str) {
   return div.innerHTML;
 }
 
+// ===== New Chat =====
+$('#new-chat-btn').addEventListener('click', () => {
+  // Save current chat to history
+  if (currentMessages.length > 0) {
+    saveChatToHistory();
+  }
+  // Reset
+  currentMessages = [];
+  chatMessages.innerHTML = '';
+  if (welcomeScreen) {
+    chatMessages.appendChild(welcomeScreen);
+    welcomeScreen.style.display = '';
+  }
+  closeSidebar();
+});
+
+function saveChatToHistory() {
+  chatCount++;
+  const history = $('#chat-history');
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('en-IN');
+  const timeStr = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+  const firstMsg = currentMessages[0]?.text?.substring(0, 30) || 'Chat';
+
+  const item = document.createElement('div');
+  item.className = 'history-item';
+  item.innerHTML = `
+    <div class="history-num">${String(chatCount).padStart(2, '0')}</div>
+    <div class="history-info">
+      <div class="history-title">${escapeHtml(firstMsg)}${firstMsg.length > 30 ? '...' : ''}</div>
+      <div class="history-date">${dateStr}, ${timeStr}</div>
+    </div>
+  `;
+  item.addEventListener('click', () => {
+    closeSidebar();
+  });
+  history.appendChild(item);
+}
+
+// ===== Sidebar Toggle (Mobile) =====
+const sidebar = $('#sidebar');
+const menuBtn = $('#menu-btn');
+
+menuBtn.addEventListener('click', () => {
+  sidebar.classList.toggle('open');
+  toggleOverlay();
+});
+
+function closeSidebar() {
+  sidebar.classList.remove('open');
+  const overlay = $('.sidebar-overlay');
+  if (overlay) overlay.remove();
+}
+
+function toggleOverlay() {
+  let overlay = $('.sidebar-overlay');
+  if (sidebar.classList.contains('open')) {
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.className = 'sidebar-overlay active';
+      overlay.addEventListener('click', closeSidebar);
+      document.body.appendChild(overlay);
+    }
+  } else if (overlay) {
+    overlay.remove();
+  }
+}
+
 // ===== Voice Input =====
 let recognition;
+const voiceBtn = $('#voice-btn');
+
 if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   recognition = new SpeechRecognition();
   recognition.continuous = false;
-  recognition.interimResults = false;
-  recognition.lang = 'en-IN';
+  recognition.interimResults = true;
+  recognition.lang = LANGUAGES[currentLang].speech;
+
+  recognition.onstart = () => {
+    voiceBtn.classList.add('listening');
+    chatInput.placeholder = '🎤 Listening...';
+  };
 
   recognition.onresult = (e) => {
-    const transcript = e.results[0][0].transcript;
-    chatInput.value = transcript;
-    sendMessage();
-    micBtn.classList.remove('listening');
-  };
-  recognition.onend = () => micBtn.classList.remove('listening');
-  recognition.onerror = () => micBtn.classList.remove('listening');
+    let interimTranscript = '';
+    let finalTranscript = '';
 
-  micBtn.addEventListener('click', () => {
-    if (micBtn.classList.contains('listening')) {
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      const transcript = e.results[i][0].transcript;
+      if (e.results[i].isFinal) {
+        finalTranscript += transcript;
+      } else {
+        interimTranscript += transcript;
+      }
+    }
+
+    // Show interim results in input
+    chatInput.value = finalTranscript || interimTranscript;
+
+    if (finalTranscript) {
+      sendMessage();
+    }
+  };
+
+  recognition.onend = () => {
+    voiceBtn.classList.remove('listening');
+    chatInput.placeholder = LANGUAGES[currentLang].placeholder;
+  };
+
+  recognition.onerror = (e) => {
+    console.warn('Speech recognition error:', e.error);
+    voiceBtn.classList.remove('listening');
+    chatInput.placeholder = LANGUAGES[currentLang].placeholder;
+  };
+
+  voiceBtn.addEventListener('click', () => {
+    if (voiceBtn.classList.contains('listening')) {
       recognition.stop();
     } else {
+      recognition.lang = LANGUAGES[currentLang].speech;
       recognition.start();
-      micBtn.classList.add('listening');
     }
   });
 } else {
-  micBtn.style.display = 'none';
+  voiceBtn.style.display = 'none';
 }
