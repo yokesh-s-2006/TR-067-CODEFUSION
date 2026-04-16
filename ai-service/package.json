@@ -1,0 +1,20 @@
+{
+  "name": "RailAssistAI-ai-service",
+  "version": "1.0.0",
+  "description": "RailAssistAI AI Service - Real-time intelligent assistant with multilingual support",
+  "main": "src/index.js",
+  "scripts": {
+    "dev": "nodemon src/index.js",
+    "start": "node src/index.js"
+  },
+  "dependencies": {
+    "dotenv": "^17.4.2",
+    "express": "^4.21.0",
+    "franc": "^6.2.0",
+    "openai": "^4.67.0",
+    "socket.io": "^4.8.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.0"
+  }
+}

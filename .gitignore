@@ -1,0 +1,30 @@
+# Dependencies
+node_modules/
+.dart_tool/
+build/
+.packages
+
+# Environment
+.env
+*.env.local
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# Build
+dist/
+*.js.map
+
+# Flutter
+.flutter-plugins
+.flutter-plugins-dependencies
+*.lock
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Web preview
+web/node_modules/
