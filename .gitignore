@@ -28,3 +28,5 @@ Thumbs.db
 
 # Web preview
 web/node_modules/
+
+.vercel

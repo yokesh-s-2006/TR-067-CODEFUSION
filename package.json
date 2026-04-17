@@ -1,5 +1,5 @@
 {
-  "name": "RailAssistAI",
+  "name": "railassist-ai",
   "version": "1.0.0",
   "description": "RailAssistAI - Vercel Deployment",
   "dependencies": {
