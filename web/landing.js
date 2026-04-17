@@ -218,4 +218,31 @@
   }, { threshold: 0.5 });
 
   statNumbers.forEach(el => statObserver.observe(el));
+
+  // ===== QR Modal Logic =====
+  const qrModalBtn = document.getElementById('qr-modal-btn');
+  const qrModal = document.getElementById('qr-modal');
+  const qrCloseBtn = document.getElementById('qr-close-btn');
+  const qrCodeImg = document.getElementById('qr-code-img');
+
+  if (qrModalBtn && qrModal && qrCloseBtn && qrCodeImg) {
+    qrModalBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      // Use the current URL
+      let currentUrl = window.location.href.split('#')[0];
+      // Generate QR Code via qrserver API
+      qrCodeImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(currentUrl)}&margin=15`;
+      qrModal.classList.add('active');
+    });
+
+    qrCloseBtn.addEventListener('click', () => {
+      qrModal.classList.remove('active');
+    });
+
+    qrModal.addEventListener('click', (e) => {
+      if (e.target === qrModal) {
+        qrModal.classList.remove('active');
+      }
+    });
+  }
 })();

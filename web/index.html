@@ -28,6 +28,7 @@
       <div class="landing-nav-links">
         <a href="#features" class="landing-nav-link">Features</a>
         <a href="#routes" class="landing-nav-link">Routes</a>
+        <a href="#" id="qr-modal-btn" class="landing-nav-link">📱 Mobile App</a>
         <a href="#get-started" class="landing-nav-link">Get Started</a>
         <button class="hero-cta" data-action="launch" style="padding:10px 24px; font-size:14px; border-radius:12px;">
           <span>Open Chat</span>
@@ -202,6 +203,18 @@
     <footer class="landing-footer">
       <p>Built with ❤️ for Indian Railways • RailAssist AI &copy; 2026</p>
     </footer>
+
+    <!-- QR Code Modal -->
+    <div class="qr-modal" id="qr-modal">
+      <div class="qr-modal-content">
+        <button class="qr-close-btn" id="qr-close-btn">×</button>
+        <h2>Switch to Mobile</h2>
+        <p>Point your phone's camera at this QR code to instantly open the app on your device.</p>
+        <div class="qr-code-wrapper">
+          <img id="qr-code-img" src="" alt="QR Code Loading...">
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- Page Transition Overlay (outside landing) -->
