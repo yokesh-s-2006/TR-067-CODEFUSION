@@ -65,7 +65,7 @@ async function checkHealth() {
   const dot = $('#status-dot');
   const text = $('#status-text');
   try {
-    const res = await fetch(`${AI_URL}/health`, { signal: AbortSignal.timeout(3000) });
+    const res = await fetch(`/api/health`, { signal: AbortSignal.timeout(3000) });
     if (res.ok) {
       dot.className = 'status-dot-live';
       text.textContent = 'AI powered • Indian Railways';
@@ -78,23 +78,7 @@ async function checkHealth() {
 checkHealth();
 setInterval(checkHealth, 15000);
 
-// ===== Socket.IO =====
-let socket;
-try {
-  socket = io(AI_URL, { transports: ['websocket', 'polling'], autoConnect: true });
-  socket.on('connect', () => {
-    console.log('✅ Connected to AI');
-    checkHealth();
-  });
-  socket.on('chat-response', handleAIResponse);
-  socket.on('disconnect', () => {
-    console.log('❌ Disconnected from AI');
-    const dot = $('#status-dot');
-    dot.className = 'status-dot-live offline';
-  });
-} catch (e) {
-  console.warn('Socket.IO not available');
-}
+// Socket.io removed for Vercel deployment
 
 // ===== Chat Functions =====
 const chatMessages = $('#chat-messages');
@@ -147,18 +131,22 @@ function sendMessage() {
   chatInput.value = '';
   showTyping();
 
-  if (socket && socket.connected) {
-    socket.emit('chat-message', {
+  fetch('/api/chat', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
       message: text,
       userId: 'web-user-1',
       language: currentLang
-    });
-  } else {
-    setTimeout(() => {
-      removeTyping();
-      addMessage("I'm connecting to the AI service. Please wait a moment and try again.", 'ai');
-    }, 1500);
-  }
+    })
+  })
+  .then(res => res.json())
+  .then(data => handleAIResponse(data))
+  .catch(err => {
+    removeTyping();
+    addMessage("I'm connecting to the AI service. Please wait a moment and try again.", 'ai');
+    console.warn('API Error:', err);
+  });
 }
 
 function handleAIResponse(data) {

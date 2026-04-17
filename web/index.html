@@ -5,11 +5,214 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>RailAssist AI - Indian Railways AI Assistant</title>
   <meta name="description" content="RailAssist AI - AI-powered Indian Railways companion. Search trains, check PNR, file complaints in 22 Indian languages.">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="landing.css">
 </head>
 <body>
+
+  <!-- ============================
+       LANDING PAGE OVERLAY
+       ============================ -->
+  <div class="landing-page" id="landing-page">
+
+    <!-- Particle Background -->
+    <canvas id="particle-canvas"></canvas>
+
+    <!-- Navigation Bar -->
+    <nav class="landing-nav">
+      <div class="landing-nav-brand">
+        <div class="landing-nav-logo">🚂</div>
+        <span class="landing-nav-title">RailAssist AI</span>
+      </div>
+      <div class="landing-nav-links">
+        <a href="#features" class="landing-nav-link">Features</a>
+        <a href="#routes" class="landing-nav-link">Routes</a>
+        <a href="#get-started" class="landing-nav-link">Get Started</a>
+        <button class="hero-cta" data-action="launch" style="padding:10px 24px; font-size:14px; border-radius:12px;">
+          <span>Open Chat</span>
+          <svg class="hero-cta-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </button>
+      </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero-section">
+      <div class="hero-content">
+        <div class="hero-badge">
+          <span class="hero-badge-dot"></span>
+          AI-Powered Railway Intelligence
+        </div>
+
+        <h1 class="hero-title">
+          <span class="hero-title-line">Your Smart</span>
+          <span class="hero-title-line"><span class="gradient-text">Railway Companion</span></span>
+        </h1>
+
+        <p class="hero-subtitle">
+          Navigate Indian Railways effortlessly with AI that speaks your language.
+          Real-time PNR tracking, train search, complaints — all in 22 Indian languages.
+        </p>
+
+        <div class="hero-actions">
+          <button class="hero-cta" data-action="launch" id="hero-launch-btn">
+            <span>Launch Assistant</span>
+            <svg class="hero-cta-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+              <path d="M5 12h14M12 5l7 7-7 7"/>
+            </svg>
+          </button>
+          <a href="#features" class="hero-secondary">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8" fill="currentColor" stroke="none"/></svg>
+            Explore Features
+          </a>
+        </div>
+
+        <!-- Stats -->
+        <div class="stats-bar">
+          <div class="stat-item">
+            <div class="stat-number" data-count="22" data-suffix="+">0</div>
+            <div class="stat-label">Languages Supported</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-number" data-count="13000" data-suffix="+">0</div>
+            <div class="stat-label">Trains Covered</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-number" data-count="7500" data-suffix="+">0</div>
+            <div class="stat-label">Stations Mapped</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-number" data-count="24" data-suffix="/7">0</div>
+            <div class="stat-label">AI Availability</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features-section" id="features">
+      <div class="section-header">
+        <div class="section-label">✨ Capabilities</div>
+        <h2 class="section-title">Everything You Need,<br>Right at Your Fingertips</h2>
+        <p class="section-subtitle">Powered by advanced AI to handle every aspect of your railway journey — fast, reliable, and multilingual.</p>
+      </div>
+
+      <div class="features-grid">
+        <div class="feature-card" style="--glow-color: rgba(255,107,53,0.08);">
+          <div class="feature-card-glow"></div>
+          <div class="feature-icon">📋</div>
+          <h3>PNR Status Tracking</h3>
+          <p>Instantly check your reservation status with AI-powered parsing. Get booking details, coach position, and berth info in seconds.</p>
+        </div>
+        <div class="feature-card" style="--glow-color: rgba(232,67,147,0.08);">
+          <div class="feature-card-glow"></div>
+          <div class="feature-icon">🚆</div>
+          <h3>Smart Train Search</h3>
+          <p>Find trains between any two stations with real-time availability, fares, and duration. Filter by class, quota, and departure time.</p>
+        </div>
+        <div class="feature-card" style="--glow-color: rgba(168,85,247,0.08);">
+          <div class="feature-card-glow"></div>
+          <div class="feature-icon">🗣️</div>
+          <h3>Voice in 22 Languages</h3>
+          <p>Speak in Hindi, Tamil, Bengali, or any of 22 Indian languages. Our AI understands and responds naturally in your mother tongue.</p>
+        </div>
+        <div class="feature-card" style="--glow-color: rgba(0,184,148,0.08);">
+          <div class="feature-card-glow"></div>
+          <div class="feature-icon">📝</div>
+          <h3>File Complaints</h3>
+          <p>Report issues with cleanliness, safety, or service directly through the chat. We'll guide you through the process step by step.</p>
+        </div>
+        <div class="feature-card" style="--glow-color: rgba(59,130,246,0.08);">
+          <div class="feature-card-glow"></div>
+          <div class="feature-icon">🚏</div>
+          <h3>Platform & Schedule Info</h3>
+          <p>Know your departure platform, arrival times, and any delays before you reach the station. Stay informed and travel stress-free.</p>
+        </div>
+        <div class="feature-card" style="--glow-color: rgba(251,191,36,0.08);">
+          <div class="feature-card-glow"></div>
+          <div class="feature-icon">🤖</div>
+          <h3>AI-Powered Answers</h3>
+          <p>Ask complex questions naturally — our AI understands context, follow-ups, and can help plan multi-leg journeys intelligently.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Route Animation Section -->
+    <section class="route-section" id="routes">
+      <div class="route-content">
+        <div class="route-visual">
+          <div class="route-line"></div>
+          <div class="route-line-glow"></div>
+          <div class="route-station">
+            <div class="station-dot"></div>
+            <span class="station-label">New Delhi</span>
+          </div>
+          <div class="route-station">
+            <div class="station-dot"></div>
+            <span class="station-label">Jaipur</span>
+          </div>
+          <div class="route-station">
+            <div class="station-dot"></div>
+            <span class="station-label">Ahmedabad</span>
+          </div>
+          <div class="route-station">
+            <div class="station-dot"></div>
+            <span class="station-label">Mumbai</span>
+          </div>
+          <div class="route-train">🚂</div>
+        </div>
+
+        <div class="route-info">
+          <h2>Track Every<br><span class="gradient-text">Journey in Real-Time</span></h2>
+          <p>From booking to destination, RailAssist AI keeps you informed at every stop along the way. Live tracking powered by intelligent systems.</p>
+          <ul class="route-features-list">
+            <li>
+              <span class="route-feature-check" style="background: rgba(0,184,148,0.15); color:#00b894;">✓</span>
+              Real-time train location tracking
+            </li>
+            <li>
+              <span class="route-feature-check" style="background: rgba(168,85,247,0.15); color:#a855f7;">✓</span>
+              Platform arrival predictions
+            </li>
+            <li>
+              <span class="route-feature-check" style="background: rgba(255,107,53,0.15); color:#ff6b35;">✓</span>
+              Delay alerts & alternate route suggestions
+            </li>
+            <li>
+              <span class="route-feature-check" style="background: rgba(232,67,147,0.15); color:#e84393;">✓</span>
+              Multi-stop journey planning
+            </li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section" id="get-started">
+      <div class="cta-card">
+        <h2>Ready to Travel<br><span class="gradient-text">Smarter?</span></h2>
+        <p>Start a conversation with RailAssist AI and experience the future of Indian Railways assistance.</p>
+        <button class="cta-launch-btn" data-action="launch">
+          <span>🚀 Start Now — It's Free</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="landing-footer">
+      <p>Built with ❤️ for Indian Railways • RailAssist AI &copy; 2026</p>
+    </footer>
+  </div>
+
+  <!-- Page Transition Overlay (outside landing) -->
+  <div class="page-transition" id="page-transition">
+    <div class="transition-circle"></div>
+  </div>
+
+  <!-- ============================
+       MAIN CHAT UI (unchanged)
+       ============================ -->
+
   <!-- Sidebar -->
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-header">
@@ -150,6 +353,7 @@
     </div>
   </main>
 
+  <script src="landing.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

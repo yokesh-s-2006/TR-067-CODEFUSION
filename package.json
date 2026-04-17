@@ -1,0 +1,14 @@
+{
+  "name": "RailAssistAI",
+  "version": "1.0.0",
+  "description": "RailAssistAI - Vercel Deployment",
+  "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "cors": "^2.8.5",
+    "dotenv": "^17.4.2",
+    "express": "^4.21.0",
+    "franc": "^6.2.0",
+    "groq-sdk": "^1.1.2",
+    "openai": "^4.67.0"
+  }
+}
